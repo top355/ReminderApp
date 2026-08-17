@@ -88,8 +88,9 @@ class ReminderReceiver : BroadcastReceiver() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setContentIntent(pi)
-            .setFlags(NotificationCompat.FLAG_INSISTENT)
             .build()
+
+        notification.flags = notification.flags or Notification.FLAG_INSISTENT
 
         manager.notify(System.currentTimeMillis().toInt(), notification)
     }
