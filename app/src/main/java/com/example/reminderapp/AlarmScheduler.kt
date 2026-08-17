@@ -4,7 +4,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import java.util.Calendar
 
 object AlarmScheduler {
@@ -36,19 +35,12 @@ object AlarmScheduler {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pi
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pi
-            )
-        }
+        // setAlarmClock is the highest-priority alarm API.
+        // The system treats it as a user-visible alarm (shows alarm icon in status bar)
+        // and will not batch/delay it. This is far more reliable than setExactAndAllowWhileIdle
+        // on stock Android AND on compatibility layers like Zhuoyitong on HarmonyOS.
+        val info = AlarmManager.AlarmClockInfo(calendar.timeInMillis, pi)
+        alarmManager.setAlarmClock(info, pi)
     }
 
     fun cancel(context: Context, alarmManager: AlarmManager, reminderId: Int) {
@@ -60,5 +52,13 @@ object AlarmScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         alarmManager.cancel(pi)
+    }
+
+    /** Reschedule all stored reminders. Call this on app start and on boot. */
+    fun rescheduleAll(context: Context, alarmManager: AlarmManager) {
+        val repo = ReminderRepository(context)
+        repo.getAll().forEach { reminder ->
+            schedule(context, alarmManager, reminder)
+        }
     }
 }

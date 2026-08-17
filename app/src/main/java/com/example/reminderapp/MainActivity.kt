@@ -5,8 +5,10 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
@@ -50,6 +52,10 @@ class MainActivity : AppCompatActivity() {
         alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         requestNeededPermissions()
+        requestBatteryOptimizationExemption()
+        // Re-schedule all alarms on app start — in case the system killed them
+        // (common on HarmonyOS compatibility layers)
+        AlarmScheduler.rescheduleAll(this, alarmManager)
         refreshList()
 
         btnAdd.setOnClickListener { saveReminder() }
@@ -65,6 +71,32 @@ class MainActivity : AppCompatActivity() {
         }
         if (perms.isNotEmpty()) {
             requestPermissionLauncher.launch(perms.toTypedArray())
+        }
+    }
+
+    /** Ask the user to exempt this app from battery optimization.
+     *  On HarmonyOS this is critical — otherwise the system will aggressively
+     *  kill the app's background processes and alarms won't fire. */
+    private fun requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                try {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:$packageName")
+                    }
+                    startActivity(intent)
+                } catch (_: Exception) {
+                    // Some HarmonyOS builds may not support this intent directly.
+                    // Fall back to the general battery optimization settings page.
+                    try {
+                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        startActivity(intent)
+                    } catch (_: Exception) {
+                        // If neither works, the user will need to manually whitelist the app.
+                    }
+                }
+            }
         }
     }
 
