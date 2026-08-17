@@ -18,13 +18,17 @@ class ReminderReceiver : BroadcastReceiver() {
 
         showNotification(context, label)
 
-        // Reschedule for the next day so the reminder repeats daily.
+        // 触发后处理：每天重复则排到明天；单次则触发后从列表移除。
         if (reminderId != -1) {
             val repo = ReminderRepository(context)
             val reminder = repo.getAll().firstOrNull { it.id == reminderId }
             if (reminder != null) {
-                val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                AlarmScheduler.schedule(context, am, reminder)
+                if (reminder.repeat) {
+                    val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    AlarmScheduler.schedule(context, am, reminder)
+                } else {
+                    repo.remove(reminder.id)
+                }
             }
         }
     }

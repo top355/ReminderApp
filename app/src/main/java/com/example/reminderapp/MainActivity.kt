@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.TimePicker
 import android.widget.Toast
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var timePicker: TimePicker
     private lateinit var etLabel: EditText
+    private lateinit var rgRepeat: RadioGroup
     private lateinit var btnAdd: Button
     private lateinit var reminderList: LinearLayout
     private lateinit var repo: ReminderRepository
@@ -37,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         timePicker = findViewById(R.id.timePicker)
         etLabel = findViewById(R.id.etLabel)
+        rgRepeat = findViewById(R.id.rgRepeat)
         btnAdd = findViewById(R.id.btnAdd)
         reminderList = findViewById(R.id.reminderList)
         repo = ReminderRepository(this)
@@ -81,7 +84,8 @@ class MainActivity : AppCompatActivity() {
         val hour = timePicker.hour
         val minute = timePicker.minute
         val label = etLabel.text.toString().trim()
-        val reminder = Reminder(repo.nextId(), hour, minute, label)
+        val repeat = rgRepeat.checkedRadioButtonId == R.id.rbDaily
+        val reminder = Reminder(repo.nextId(), hour, minute, label, repeat)
         repo.add(reminder)
         AlarmScheduler.schedule(this, alarmManager, reminder)
         etLabel.text.clear()
@@ -111,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             val tvInfo = row.findViewById<TextView>(R.id.tvInfo)
             val btnDelete = row.findViewById<Button>(R.id.btnDelete)
             tvInfo.text =
-                "${formatTime(reminder.hour, reminder.minute)}   ${reminder.label.ifBlank { "(无内容)" }}"
+                "${formatTime(reminder.hour, reminder.minute)}   ${reminder.label.ifBlank { "(无内容)" }}  ·  ${if (reminder.repeat) "每天" else "单次"}"
             btnDelete.setOnClickListener { deleteReminder(reminder) }
             reminderList.addView(row)
         }

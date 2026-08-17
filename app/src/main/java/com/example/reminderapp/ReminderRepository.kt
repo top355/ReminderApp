@@ -20,7 +20,8 @@ class ReminderRepository(context: Context) {
                     id = o.getInt("id"),
                     hour = o.getInt("hour"),
                     minute = o.getInt("minute"),
-                    label = o.optString("label", "")
+                    label = o.optString("label", ""),
+                    repeat = o.optBoolean("repeat", true)
                 )
             )
         }
@@ -35,6 +36,7 @@ class ReminderRepository(context: Context) {
             o.put("hour", it.hour)
             o.put("minute", it.minute)
             o.put("label", it.label)
+            o.put("repeat", it.repeat)
             arr.put(o)
         }
         prefs.edit().putString("list", arr.toString()).apply()
