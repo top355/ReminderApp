@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         btnAdd = findViewById(R.id.btnAdd)
         reminderList = findViewById(R.id.reminderList)
         repo = ReminderRepository(this)
-        alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         requestNeededPermissions()
         refreshList()
