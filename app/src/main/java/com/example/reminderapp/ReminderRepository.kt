@@ -48,6 +48,10 @@ class ReminderRepository(context: Context) {
         saveAll(list)
     }
 
+    fun update(reminder: Reminder) {
+        saveAll(getAll().map { if (it.id == reminder.id) reminder else it })
+    }
+
     fun remove(id: Int) {
         saveAll(getAll().filter { it.id != id })
     }
