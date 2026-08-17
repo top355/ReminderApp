@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       ANDROID_HOME: ${{ github.workspace }}/android-sdk
     steps:
@@ -86,6 +88,6 @@ jobs:
           name: 最新构建 (continuous)
           body: 由 CI 自动构建的最新 debug APK，每次 push 自动更新覆盖。
           files: app/build/outputs/apk/debug/*.apk
-          overwrite: true
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
