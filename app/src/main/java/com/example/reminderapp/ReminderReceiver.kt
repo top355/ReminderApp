@@ -41,7 +41,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), null)
-                enableVibration = true
+                enableVibration(true)
             }
             manager.createNotificationChannel(channel)
         }
