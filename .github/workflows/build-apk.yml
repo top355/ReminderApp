@@ -20,7 +20,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache Android SDK
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/android-sdk
+          key: android-sdk-${{ hashFiles('app/build.gradle', 'build.gradle') }}
+
       - name: Install Android SDK command-line tools
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$ANDROID_HOME/cmdline-tools"
           curl -o /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
@@ -29,15 +37,34 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
 
       - name: Install SDK packages
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
         run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
+      - name: Cache Gradle distribution
+        id: cache-gradle
+        uses: actions/cache@v4
+        with:
+          path: /opt/gradle-8.4
+          key: gradle-8.4-v1
+
       - name: Install Gradle 8.4
+        if: steps.cache-gradle.outputs.cache-hit != 'true'
         run: |
           curl -sL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-8.4/bin" >> "$GITHUB_PATH"
+
+      - name: Add Gradle to PATH
+        run: echo "/opt/gradle-8.4/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle.properties') }}
+          restore-keys: gradle-deps-
 
       - name: Point Gradle to the Android SDK
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
